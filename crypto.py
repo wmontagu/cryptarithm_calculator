@@ -1,8 +1,8 @@
 import time
 import itertools
 
-
 numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
 #Easy
 def operate(int1, int2, int3, operation):
     if operation == "+":
@@ -203,7 +203,7 @@ def print_solution_medium(assignment, str1, str2, result_str, operation):
         print("No solution found")
 
 
-import time
+# Hard
 
 def performance_test():
     print("=== PERFORMANCE COMPARISON ===")
@@ -246,5 +246,7 @@ print(f"CSP time for simpler problem: {simple_csp_time:.4f} seconds")
 print_solution_medium(simple_csp, "TWO", "TWO", "FOUR", '+')
 
 
-#Hard
+
+
+
 

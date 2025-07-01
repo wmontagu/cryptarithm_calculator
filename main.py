@@ -31,7 +31,7 @@ except Exception as e:
 
 
 
-def predict_solvability(str1, str2, equal, operation):
+def predict_solvability(str1, str2, equal, operation): #hard
 
     if not MODEL:
         return None, "Model is not available"
@@ -81,9 +81,8 @@ async def read_root(request: Request):
 
 
 @app.post("/solve")
-# Want to either do easy or hard...
-async def solve_cryptarithm(
-    
+# Want to either do easy or hard... #medium
+async def solve_cryptarithm( 
     request: Request,
     str1: str = Form(...),
     str2: str = Form(...),
@@ -129,9 +128,62 @@ async def solve_cryptarithm(
     elif method == 'hard' and not MODEL:
         response_data["error"] = "ML method requires available model"
         method = "medium"
+
+    if method == "medium" or (method == "hard" and MODEL):
+        assignment = solve_crypto_init_medium(str1, str2, result, operation)
+    else:
+        assignment = None
+
+    if not assignment:
+        response_data[""]
     
     return templates.TemplateResponse("index.html", response_data)
 
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "model_available": MODEL
+    })
+
+@app.get("/examples")
+async def get_examples(request: Request):
+    """Show some example cryptarithm problems"""
+    examples = [
+        {"str1": "SEND", "str2": "MORE", "result": "MONEY", "operation": "+", "description": "Classic cryptarithm"},
+        {"str1": "TWO", "str2": "TWO", "result": "FOUR", "operation": "+", "description": "Simple addition"},
+        {"str1": "ABC", "str2": "DEF", "result": "GHIJ", "operation": "+", "description": "Pattern example"},
+        {"str1": "CAB", "str2": "CAB", "result": "DEED", "operation": "+", "description": "Repeated patterns"},
+    ]
+    
+    return templates.TemplateResponse("examples.html", {
+        "request": request,
+        "examples": examples,
+        "model_available": MODEL
+    })
+
+@app.get("/about")
+async def about(request: Request):
+    """Information about the cryptarithm calculator"""
+    return templates.TemplateResponse("about.html", {
+        "request": request,
+        "model_available": MODEL
+    })
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "ml_model_available": MODEL
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    print("Starting Cryptarithm Calculator...")
+    print(f"ML Model Available: {MODEL}")
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
 
     
 

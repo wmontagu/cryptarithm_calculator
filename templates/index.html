@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptarithm Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .equation-preview {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.2em;
+            color: #495057;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .method-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .method-option {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .method-option-2 {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            grid-column: 1 / -1; /* This makes it span the full width */
+        }
+
+        .method-option:hover, .method-option-2:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .method-option.selected, .method-option-2.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .method-option input[type="radio"], .method-option-2 input[type="radio"] {
+            display: none;
+        }
+
+        .method-title{
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .method-description {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .solve-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        .solve-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .solve-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .solution-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #28a745;
+        }
+
+        .solution-header {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .assignments {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .assignment {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            font-weight: 600;
+        }
+
+        .equation-result {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            border: 2px solid #28a745;
+        }
+
+        .performance-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.available {
+            background: #28a745;
+        }
+
+        .status-dot.unavailable {
+            background: #dc3545;
+        }
+
+        @media (max-width: 600px) {
+            .method-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+
+        .example-link {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .example-link:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Cryptarithm Calculator</h1>
+        <p class="subtitle">Solve mathematical word puzzles using AI algorithms</p>
+        
+        <div class="nav-links">
+            <!-- <a href="/">Home</a> -->
+            <!-- <a href="/examples">Examples</a> -->
+            <!-- <a href="/about">About</a> -->
+        </div>
+
+        <div class="status-indicator">
+            <span class="status-dot {% if model_available %}available{% else %}unavailable{% endif %}"></span>
+            ML Model: {% if model_available %}Available{% else %}Not Available{% endif %}
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">
+            ❌ {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" action="/solve" id="cryptarithmForm">
+            <div class="form-group">
+                <label for="str1">First Word:</label>
+                <input type="text" id="str1" name="str1" value="{{ str1 or '' }}" placeholder="e.g., SEND" required>
+            </div>
+
+            <div class="form-group">
+                <label for="operation">Operation:</label>
+                <select id="operation" name="operation" required>
+                    <option value="+" {% if operation == '+' %}selected{% endif %}>Addition (+)</option>
+                    <option value="-" {% if operation == '-' %}selected{% endif %}>Subtraction (-)</option>
+                    <option value="*" {% if operation == '*' %}selected{% endif %}>Multiplication (×)</option>
+                    <option value="/" {% if operation == '/' %}selected{% endif %}>Division (÷)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="str2">Second Word:</label>
+                <input type="text" id="str2" name="str2" value="{{ str2 or '' }}" placeholder="e.g., MORE" required>
+            </div>
+
+            <div class="equation-preview" id="equationPreview">
+                Enter words to see equation preview
+            </div>
+
+            <div class="form-group">
+                <label for="result">Result Word:</label>
+                <input type="text" id="result" name="result" value="{{ result or '' }}" placeholder="e.g., MONEY" required>
+            </div>
+
+            <div class="form-group">
+                <label>Solution Method:</label>
+                <div class="method-selection">
+                    <label class="method-option {% if method == 'medium' or not method %}selected{% endif %}">
+                        <input type="radio" name="method" value="medium" {% if method == 'medium' or not method %}checked{% endif %}>
+                        <div class="method-title">Medium (CSP)</div>
+                        <div class="method-description">Constraint Satisfaction with Forward Checking</div>
+                    </label>
+                    <label class="method-option {% if method == 'hard' %}selected{% endif %} {% if not model_available %}method-disabled{% endif %}">
+                        <input type="radio" name="method" value="hard" {% if method == 'hard' %}checked{% endif %} {% if not model_available %}disabled{% endif %}>
+                        <div class="method-title">Hard (ML)</div>
+                        <div class="method-description">
+                            {% if model_available %}
+                                ML Prediction Only
+                            {% else %}
+                                ML Model Required (Unavailable)
+                            {% endif %}
+                        </div>
+                    </label>
+                    <label class="method-option-2 {% if method == 'both' %}selected{% endif %} {% if not model_available %}method-disabled{% endif %}">
+                        <input type="radio" name="method" value="both" {% if method == 'both' %}checked{% endif %} {% if not model_available %}disabled{% endif %}>
+                        <div class="method-title">Both Methods</div>
+                        <div class="method-description">
+                            {% if model_available %}
+                                Show ML Prediction + CSP Results
+                            {% else %}
+                                ML Model Required (Unavailable)
+                            {% endif %}
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="solve-btn">🔍 Solve Cryptarithm</button>
+        </form>
+
+        {% if prediction %}
+        <div class="alert alert-info">
+            🤖 <strong>ML Prediction:</strong> {{ prediction }}
+        </div>
+        {% endif %}
+
+        {% if ml_predicts_unsolvable %}
+        <div class="alert alert-warning">
+            ⚠️ <strong>ML Model predicts this cryptarithm may not be solvable.</strong> Running CSP to verify...
+        </div>
+        {% endif %}
+
+        {% if solved %}
+        <div class="solution-container">
+            <div class="solution-header">
+                ✅ Solution Found!
+            </div>
+            
+            <div class="assignments">
+                {% for letter, digit in solution_data.assignments.items() %}
+                <div class="assignment">
+                    {{ letter }} = {{ digit }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="equation-result">
+                {{ solution_data.equation }}
+            </div>
+
+            <div class="performance-info">
+                <span>Method: {{ method.title() }}</span>
+                <span>Solved in: {{ solve_time }}s</span>
+            </div>
+        </div>
+        {% elif no_solution %}
+        <div class="alert alert-error">
+            ❌ <strong>No solution found.</strong> This cryptarithm may not have a valid solution with the given constraints.
+            <div style="margin-top: 10px; font-size: 0.9em;">
+                Time spent searching: {{ solve_time }}s
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- <div style="text-align: center; margin-top: 30px;">
+            <a href="/examples" class="example-link">📚 View Example Problems</a>
+        </div> -->
+    </div>
+
+    <script>
+        // Update equation preview
+        function updatePreview() {
+            const str1 = document.getElementById('str1').value.toUpperCase() || 'WORD1';
+            const str2 = document.getElementById('str2').value.toUpperCase() || 'WORD2';
+            const result = document.getElementById('result').value.toUpperCase() || 'RESULT';
+            const operation = document.getElementById('operation').value;
+            
+            document.getElementById('equationPreview').innerHTML = 
+                `${str1} ${operation} ${str2} = ${result}`;
+        }
+
+        // Handle method selection visual feedback
+        document.querySelectorAll('input[name="method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.method-option, .method-option-2').forEach(option => {
+                    option.classList.remove('selected');
+                });
+                this.closest('.method-option, .method-option-2').classList.add('selected');
+            });
+        });
+
+        // Add event listeners
+        document.getElementById('str1').addEventListener('input', updatePreview);
+        document.getElementById('str2').addEventListener('input', updatePreview);
+        document.getElementById('result').addEventListener('input', updatePreview);
+        document.getElementById('operation').addEventListener('change', updatePreview);
+
+        // Convert inputs to uppercase
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            input.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+                updatePreview();
+            });
+        });
+
+        // Initialize preview
+        updatePreview();
+
+        // Form validation
+        document.getElementById('cryptarithmForm').addEventListener('submit', function(e) {
+            const str1 = document.getElementById('str1').value.trim();
+            const str2 = document.getElementById('str2').value.trim();
+            const result = document.getElementById('result').value.trim();
+
+            if (!str1 || !str2 || !result) {
+                e.preventDefault();
+                alert('Please fill in all word fields.');
+                return;
+            }
+
+            // Check for non-alphabetic characters
+            const alphaRegex = /^[A-Za-z]+$/;
+            if (!alphaRegex.test(str1) || !alphaRegex.test(str2) || !alphaRegex.test(result)) {
+                e.preventDefault();
+                alert('All words must contain only letters.');
+                return;
+            }
+
+            // Check unique character constraint
+            const allChars = new Set((str1 + str2 + result).toUpperCase());
+            if (allChars.size > 10) {
+                e.preventDefault();
+                alert('Too many unique characters. Maximum 10 allowed (for digits 0-9).');
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

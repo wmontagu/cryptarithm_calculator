@@ -198,7 +198,7 @@ def print_solution_medium(assignment, str1, str2, result_str, operation):
         print(f"{str2:>6} = {num2}")
         print("-" * 8)
         print(f"{result_str:>6} = {result}")
-        print(f"\nVerification: {num1} {operation} {num2} = {result} ✓")
+        print(f"\nVerification: {num1} {operation} {num2} = {result} (correct)")
     else:
         print("No solution found")
 
@@ -232,7 +232,6 @@ def performance_test():
     print(f"\nSpeedup: {brute_time/csp_time:.1f}x faster with CSP")
 
 
-performance_test()
 
 
 print("\n" + "="*60)

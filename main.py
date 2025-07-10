@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
+import sys
 import time
 import pickle
 from crypto import solve_crypto_init_medium
@@ -10,22 +11,72 @@ from inference import make_features, load_sklearn_model
 
 app = FastAPI(title="Cryptarithm Calculator", description="Solving cryptarithm puzzles using CSP and ML")
 
+# Add startup debugging information
+print(f"Starting application in directory: {os.getcwd()}")
+print(f"__file__: {__file__}")
+print(f"Script directory: {os.path.dirname(__file__)}")
 
-os.makedirs("templates", exist_ok=True)
-os.makedirs("static", exist_ok=True)
+# Check if files and directories exist before app starts
+try:
+    print(f"Checking content of current directory: {os.listdir('.')}")
+except Exception as e:
+    print(f"Error listing current directory: {str(e)}")
+
+# Ensure directories exist
+try:
+    os.makedirs("templates", exist_ok=True)
+    os.makedirs("static", exist_ok=True)
+    print("Created templates and static directories successfully")
+except Exception as e:
+    print(f"Error creating directories: {str(e)}")
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+try:
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+    print("Static files mounted successfully")
+except Exception as e:
+    print(f"Error mounting static files: {str(e)}")
 
-templates = Jinja2Templates(directory="templates")
+# Initialize templates
+templates = None
+try:
+    templates = Jinja2Templates(directory="templates")
+    print("Templates initialized successfully")
+    # Check if template files exist
+    try:
+        template_files = os.listdir("templates")
+        print(f"Available template files: {template_files}")
+    except Exception as e:
+        print(f"Error listing template files: {str(e)}")
+except Exception as e:
+    print(f"Error initializing templates: {str(e)}")
 
 MODEL = False
 ml_model = None
 try:
-    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'model.json'))
-    ml_model = load_sklearn_model(model_path)
-    MODEL = True
-    print(f'Model successfully loaded!')
+    # Try multiple paths for model loading in Vercel environment
+    possible_paths = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), 'model.json')),
+        os.path.join(os.getcwd(), 'model.json'),
+        'model.json'
+    ]
+    
+    model_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"Found model at: {path}")
+            model_path = path
+            break
+        else:
+            print(f"Model not found at: {path}")
+    
+    if model_path:
+        ml_model = load_sklearn_model(model_path)
+        MODEL = True
+        print(f'Model successfully loaded from: {model_path}')
+    else:
+        print(f"Model file not found in any of these paths: {possible_paths}")
+        
 except Exception as e:
     print(f"ML Model loading error: {str(e)}")
     import traceback
@@ -70,10 +121,27 @@ def format_solution_output(assignment, str1, str2, result_str, operation):
 @app.get('/', response_class=HTMLResponse)
 async def read_root(request: Request):
     """Main page"""
-    return templates.TemplateResponse("index.html", {
-        "request": request, 
-        "model_available": MODEL
-    })
+    try:
+        if templates is None:
+            return HTMLResponse(content="<h1>Error: Templates not available</h1>", status_code=500)
+        
+        try:
+            # Check if index.html exists
+            template_path = os.path.join("templates", "index.html")
+            if not os.path.exists(template_path):
+                print(f"Template file not found: {template_path}")
+                return HTMLResponse(content=f"<h1>Error: Template not found: {template_path}</h1>", status_code=500)
+                
+            return templates.TemplateResponse("index.html", {
+                "request": request, 
+                "model_available": MODEL
+            })
+        except Exception as e:
+            print(f"Template rendering error: {str(e)}")
+            return HTMLResponse(content=f"<h1>Template rendering error: {str(e)}</h1>", status_code=500)
+    except Exception as e:
+        print(f"Error in read_root: {str(e)}")
+        return HTMLResponse(content=f"<h1>Server error: {str(e)}</h1>", status_code=500)
 
 @app.post("/solve", response_class=HTMLResponse)
 async def solve_cryptarithm(
@@ -195,9 +263,33 @@ async def about(request: Request):
 
 @app.get("/health")
 async def health_check():
+    # Get environment details for debugging
+    env_info = {}
+    for key in ["VERCEL", "VERCEL_ENV", "VERCEL_URL", "VERCEL_REGION", "PYTHON_VERSION"]:
+        if key in os.environ:
+            env_info[key] = os.environ[key]
+            
+    # Check directories and files
+    try:
+        file_list = os.listdir('.')
+    except Exception as e:
+        file_list = f"Error listing files: {str(e)}"
+        
+    try:
+        template_exists = os.path.exists('templates')
+        template_files = os.listdir('templates') if template_exists else []
+    except Exception as e:
+        template_files = f"Error listing template files: {str(e)}"
+    
     return {
         "status": "healthy",
-        "ml_model_available": MODEL
+        "ml_model_available": MODEL,
+        "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        "current_directory": os.getcwd(),
+        "environment_info": env_info,
+        "files_in_root": file_list,
+        "template_dir_exists": template_exists if 'template_exists' in locals() else None,
+        "template_files": template_files
     }
 
 # For Vercel, we expose the app directly

@@ -3,11 +3,10 @@
   "builds": [
     {
       "src": "main.py",
-      "use": "@vercel/python",
+      "use": "@vercel/python@3.1.32",
       "config": {
         "runtime": "python3.9",
-        "installCommand": "pip install --no-cache-dir -r requirements.txt",
-        "maxLambdaSize": "15mb"
+        "installCommand": "pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt"
       }
     }
   ],

@@ -1,14 +1,14 @@
 from fastapi import FastAPI, Request, Form
-import joblib
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 import time
+import joblib
 import pandas as pd
 
 from crypto import solve_crypto_init_medium, print_solution_medium
-from hardversion import make_features, train_classifier
+from inference import make_features
 
 app = FastAPI(title="Cryptarithm Calculator", description="Solving cryptarithm puzzles using CSP and ML")
 

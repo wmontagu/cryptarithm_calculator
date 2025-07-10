@@ -37,3 +37,5 @@ ENV/
 # Local development
 .vercel
 .env.local
+
+.vercel

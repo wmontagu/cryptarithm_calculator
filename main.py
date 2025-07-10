@@ -5,9 +5,8 @@ from fastapi.templating import Jinja2Templates
 import os
 import time
 import pickle
-
-from crypto import solve_crypto_init_medium, print_solution_medium
-from inference import make_features
+from crypto import solve_crypto_init_medium
+from inference import make_features, load_sklearn_model
 
 app = FastAPI(title="Cryptarithm Calculator", description="Solving cryptarithm puzzles using CSP and ML")
 
@@ -21,14 +20,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 MODEL = False
-ml_model = None
 try:
-    model_path = os.path.join(os.path.dirname(__file__), 'model.pkl')
-    if os.path.exists(model_path):
-        with open(model_path, 'rb') as f:
-            ml_model = pickle.load(f)
-        MODEL = True
-    print(f'Model model.pkl successfully uploaded!')
+    ml_model = load_sklearn_model('model.json')
+    MODEL = True
+    print(f'Model successfully uploaded!')
 except Exception as e:
     print(f"ML Model not found: {e}")
     print("Running without ML model - only CSP method available")

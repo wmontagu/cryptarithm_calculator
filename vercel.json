@@ -13,14 +13,16 @@
           "runtime.txt",
           "templates/**",
           "static/**",
-          "model.pkl"
+          "inference.py",
+          "crypto.py",
+          "model.json"
         ],
         "excludeFiles": [
           "**/*.ipynb",
           "hardversion.py",
-          "crypto.py",
-          "inference.py",
+          "extract_random_forest.py",
           "examples.html",
+          "model.pkl",
           ".git/**",
           "README.md"
         ]

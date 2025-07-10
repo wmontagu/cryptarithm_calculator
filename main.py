@@ -20,12 +20,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 MODEL = False
+ml_model = None
 try:
-    ml_model = load_sklearn_model('model.json')
+    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'model.json'))
+    ml_model = load_sklearn_model(model_path)
     MODEL = True
-    print(f'Model successfully uploaded!')
+    print(f'Model successfully loaded!')
 except Exception as e:
-    print(f"ML Model not found: {e}")
+    print(f"ML Model loading error: {str(e)}")
+    import traceback
+    print(traceback.format_exc())
     print("Running without ML model - only CSP method available")
 
 def predict_solvability(str1, str2, equal, operation):

@@ -23,9 +23,11 @@ templates = Jinja2Templates(directory="templates")
 MODEL = False
 ml_model = None
 try:
-    with open('model.pkl', 'rb') as f:
-        ml_model = pickle.load(f)
-    MODEL = True
+    model_path = os.path.join(os.path.dirname(__file__), 'model.pkl')
+    if os.path.exists(model_path):
+        with open(model_path, 'rb') as f:
+            ml_model = pickle.load(f)
+        MODEL = True
     print(f'Model model.pkl successfully uploaded!')
 except Exception as e:
     print(f"ML Model not found: {e}")
@@ -33,14 +35,13 @@ except Exception as e:
 
 def predict_solvability(str1, str2, equal, operation):
     
-    if not MODEL:
+    if not MODEL or ml_model is None:
         return None, "Model is not available"
     
     try:
         features_df = make_features(str1, str2, equal, operation)
-        features_2d = [features_df]
-        pred = features_2d.predict(features_df)[0]
-        prob = features_2d.predict_proba(features_df)[0]
+        pred = ml_model.predict([features_df])[0]
+        prob = ml_model.predict_proba([features_df])[0]
         conf = max(prob)
         return pred, f"Prediction: {'Solvable' if pred == 1 else 'Not Solvable'} (confidence: {conf:.3f})"
     except Exception as e:

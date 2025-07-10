@@ -6,7 +6,24 @@
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.12",
-        "pythonVersion": "3.12"
+        "pythonVersion": "3.12",
+        "includeFiles": [
+          "main.py",
+          "requirements.txt",
+          "runtime.txt",
+          "templates/**",
+          "static/**",
+          "model.pkl"
+        ],
+        "excludeFiles": [
+          "**/*.ipynb",
+          "hardversion.py",
+          "crypto.py",
+          "inference.py",
+          "examples.html",
+          ".git/**",
+          "README.md"
+        ]
       }
     }
   ],

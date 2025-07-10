@@ -4,8 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 import time
-import joblib
-import pandas as pd
+import pickle
 
 from crypto import solve_crypto_init_medium, print_solution_medium
 from inference import make_features
@@ -22,8 +21,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 MODEL = False
+ml_model = None
 try:
-    ml_model = joblib.load('model.pkl')
+    with open('model.pkl', 'rb') as f:
+        ml_model = pickle.load(f)
     MODEL = True
     print(f'Model model.pkl successfully uploaded!')
 except Exception as e:
@@ -37,8 +38,9 @@ def predict_solvability(str1, str2, equal, operation):
     
     try:
         features_df = make_features(str1, str2, equal, operation)
-        pred = ml_model.predict(features_df)[0]
-        prob = ml_model.predict_proba(features_df)[0]
+        features_2d = [features_df]
+        pred = features_2d.predict(features_df)[0]
+        prob = features_2d.predict_proba(features_df)[0]
         conf = max(prob)
         return pred, f"Prediction: {'Solvable' if pred == 1 else 'Not Solvable'} (confidence: {conf:.3f})"
     except Exception as e:

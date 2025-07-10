@@ -1,10 +1,8 @@
-import numpy as np
-import pandas as pd
-from collections import Counter
 
+from collections import Counter
+# Need to make features without using pandas for deployment.
 def make_features(str1, str2, equal, operation):
-    # Feature extraction function - same as in hardversion.py
-    # This only needs pandas and numpy, not scikit-learn
+    
     feature_order = [
         'str1 len', 'str2 len', 'equal len', 'all len', 'unique char',
         'max occurences', 'min occurences', 'reuse ratio', 'operation',
@@ -56,7 +54,7 @@ def make_features(str1, str2, equal, operation):
 
     crypto_complexity = all_len * unique_char
 
-    # Create DataFrame with values in the exact order we want
+    # value list
     feature_values = [
         str1_len, str2_len, equal_len, all_len, unique_char,
         max_occurences, min_occurences, reuse_ratio, operation_encoded,
@@ -66,4 +64,4 @@ def make_features(str1, str2, equal, operation):
         min_equal_occurences, max_1_2_occurences, min_1_2_occurences,
         crypto_complexity
     ]
-    return pd.DataFrame([feature_values], columns=feature_order)
+    return feature_values

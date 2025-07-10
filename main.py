@@ -203,6 +203,15 @@ async def health_check():
 # For Vercel, we expose the app directly
 # The __name__ == "__main__" block is kept for local development
 
+# Vercel handler - this is what Vercel will call
+def handler(request, context):
+    """Vercel serverless function handler"""
+    return app(request, context)
+
+# Also expose app directly for Vercel
+# Vercel looks for 'app' variable in the main module
+__all__ = ['app', 'handler']
+
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting Cryptarithm Calculator...")

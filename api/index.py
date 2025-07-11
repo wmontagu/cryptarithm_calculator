@@ -474,38 +474,27 @@ async def health_check():
         "template_files": template_files
     }
 
-# Create a lightweight handler for Vercel without extra dependencies
-def handler(event, context):
-    """Custom handler for Vercel serverless environment
-    This avoids needing additional dependencies like mangum
-    """
-    # Print basic request info for logging
-    path = event.get('path', '/') if isinstance(event, dict) else '/'
-    method = event.get('httpMethod', 'GET') if isinstance(event, dict) else 'GET'
-    print(f"Request: {method} {path}")
-    
-    # Return a simple HTML response with instructions
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'text/html',
-        },
-        'body': f'''
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Cryptarithm Calculator</title>
-            <meta http-equiv="refresh" content="0;URL='/'">
-        </head>
-        <body>
-            <h1>Redirecting to Cryptarithm Calculator...</h1>
-        </body>
-        </html>
-        '''
-    }
+# For Vercel deployment we need both WSGI and ASGI compatibility
+from http.server import BaseHTTPRequestHandler
 
-# Export both app and handler
+# Create a BaseHTTPRequestHandler class for WSGI compatibility
+class handler(BaseHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        self.app = app
+        super().__init__(*args, **kwargs)
+    
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'FastAPI app is running. Access via proper ASGI server.')
+        return
+
+# Export both the app and handler for Vercel
 __all__ = ['app', 'handler']
+
+# Note: The handler class above is for Vercel's WSGI compatibility
+# The app itself is an ASGI application that will be used when possible
 
 if __name__ == "__main__":
     import uvicorn
@@ -513,3 +502,4 @@ if __name__ == "__main__":
     print(f"📊 ML Model Available: {MODEL}")
     print("🌐 Access the app at: http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    

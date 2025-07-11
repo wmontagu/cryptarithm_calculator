@@ -206,47 +206,34 @@ class SklearnLogisticRegression:
 def load_sklearn_model(json_file):
     """Load any supported sklearn model from JSON"""
     try:
-        # First try to determine the file format by checking the first few bytes
+        print(f"Loading model from: {json_file}")
+        
+        # Read the file with various encodings, no pickle detection
         with open(json_file, 'rb') as f:
-            header = f.read(10)
-            f.seek(0)
+            # Try to read the file as text with various encodings
+            for encoding in ['utf-8', 'latin-1', 'cp1252']:
+                try:
+                    f.seek(0)
+                    content = f.read().decode(encoding)
+                    model_data = json.loads(content)
+                    print(f"Successfully loaded with encoding: {encoding}")
+                    
+                    model_type = model_data['model_type']
+                    
+                    if model_type == 'SklearnRandomForestClassifier':
+                        return SklearnRandomForest(model_data=model_data)
+                    elif model_type == 'LogisticRegression':
+                        return SklearnLogisticRegression(model_data=model_data)
+                    else:
+                        raise ValueError(f"Unsupported model type: {model_type}")
+                except UnicodeDecodeError:
+                    continue
+                except json.JSONDecodeError:
+                    continue
             
-            # Check if this is a pickle file
-            if header.startswith(b'\x80\x03') or header.startswith(b'\x80\x04'):
-                print("Detected pickle format, loading with pickle")
-                import pickle
-                model = pickle.load(f)
-                return model
-            
-            # If not pickle, try as JSON with various encodings
-            try:
-                # Try to read the file as text with various encodings
-                for encoding in ['utf-8', 'latin-1', 'cp1252']:
-                    try:
-                        f.seek(0)
-                        content = f.read().decode(encoding)
-                        model_data = json.loads(content)
-                        print(f"Successfully loaded with encoding: {encoding}")
-                        
-                        model_type = model_data['model_type']
-                        
-                        if model_type == 'SklearnRandomForestClassifier':
-                            return SklearnRandomForest(model_data=model_data)
-                        elif model_type == 'LogisticRegression':
-                            return SklearnLogisticRegression(model_data=model_data)
-                        else:
-                            raise ValueError(f"Unsupported model type: {model_type}")
-                    except UnicodeDecodeError:
-                        continue
-                    except json.JSONDecodeError:
-                        continue
-                
-                # If we get here, none of the encodings worked
-                raise ValueError("Could not decode the model file with any supported encoding")
-                
-            except Exception as e:
-                print(f"Error loading as JSON: {str(e)}")
-                raise
+            # If we get here, none of the encodings worked
+            print("Could not decode the model file with any supported encoding")
+            return None
                 
     except FileNotFoundError:
         print("❌ Model file not found!")
@@ -255,6 +242,8 @@ def load_sklearn_model(json_file):
     except Exception as e:
         print(f"❌ Error loading model: {str(e)}")
         return None
+
+        
 
 # Usage example and testing
 if __name__ == "__main__":

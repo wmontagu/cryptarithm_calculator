@@ -8,131 +8,146 @@ import time
 import pickle
 import json
 from pathlib import Path
-import itertools
-from inference import make_features, load_sklearn_model
 
-def init_crypto_variables(str1, str2, equal):
-    dicti = dict()
-    L = []
-    for l in str1:
-        if l not in L:
-            L.append(l)
-    for l in str2:
-        if l not in L:
-            L.append(l)
-    for l in equal:
-        if l not in L:
-            L.append(l)
-    
-    for l in L:
-        dicti[l] = numbers[:]
-    
-    #Initialization making it so first digit cannot be 0.
-    if str1 and str1[0] in dicti:
-        dicti[str1[0]] = numbers[1:]
-    if str2 and str2[0] in dicti:
-        dicti[str2[0]] = numbers[1:]
-    if equal and equal[0] in dicti:
-        dicti[equal[0]] = numbers[1:]
-    
-    return L, dicti
+import importlib.util
+import sys
+import os
+import json
 
-class CSP:
-    def __init__(self, variables, domains, str1, str2, equal, operation):
-        self.variables = variables
-        self.domains = {var: domain[:] for var, domain in domains.items()}
-        self.assignments = {}
-        self.str1 = str1
-        self.str2 = str2
-        self.equal = equal
-        self.operation = operation
+def import_module(module_name, file_path):
+    """Dynamically import a module from file path"""
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
 
-    def is_assignment_consistent(self, var, value):
-        for assigned_var, assigned_value in self.assignments.items():
-            if assigned_var != var and assigned_value == value:
-                return False
-        return True
-    
-    def is_complete(self):
-        return len(self.assignments) == len(self.variables)
-    
-    def select_unassigned(self):
-        unassigned = [var for var in self.variables if var not in self.assignments]
-        if not unassigned:
-            return None
-        # MRV
-        return min(unassigned, key=lambda var: len(self.domains[var]))
-    
-    def forward_check(self, var, value):
-        removed = {}
-        for other_var in self.variables:
-            if other_var != var and other_var not in self.assignments:
-                removed[other_var] = []
-                if value in self.domains[other_var]:
-                    self.domains[other_var].remove(value)
-                    removed[other_var].append(value)
-                if not self.domains[other_var]:
-                    return False, removed
-        return True, removed
-    
-    def restore_domains(self, removed):
-        for var, values in removed.items():
-            self.domains[var].extend(values)
-    
-    def check_arithmetic_constraint(self):
-        """Check if current complete assignment satisfies the arithmetic equation"""
-        def word_to_number(word):
-            return int(''.join(str(self.assignments[char]) for char in word))
+# Usage
+current_dir = os.path.dirname(__file__)
+crypto_module = import_module("crypto", os.path.join(current_dir, "crypto.py"))
+inference_module = import_module("inference", os.path.join(current_dir, "inference.py"))
+
+# Access functions - updated with your actual function names
+solve_crypto_init_medium = crypto_module.solve_crypto_init_medium
+make_features = inference_module.make_features
+load_sklearn_model = inference_module.load_sklearn_model
+
+def handler(event, context):
+    """Main serverless function handler"""
+    try:
+        # Example usage of your imported functions
+        # Adjust parameters based on your actual function signatures
         
-        num1 = word_to_number(self.str1)
-        num2 = word_to_number(self.str2)
-        result = word_to_number(self.equal)
+        # Use crypto function
+        crypto_result = solve_crypto_init_medium()  # Add parameters as needed
         
-        if self.operation == '+':
-            return (num1 + num2) == result
-        elif self.operation == '-':
-            return (num1 - num2) == result
-        elif self.operation == '*':
-            return (num1 * num2) == result
-        elif self.operation == '/':
-            return num2 != 0 and (num1 // num2) == result
-        return False
-    
-    def backtrack(self):
-        if self.is_complete():
-            return self.check_arithmetic_constraint()
-
-        var = self.select_unassigned()
-        if var is None:
-            return True
+        # Use inference functions
+        features = make_features()  # Add parameters as needed
+        model = load_sklearn_model()  # Add parameters as needed
         
-        for value in self.domains[var][:]:  
-            if self.is_assignment_consistent(var, value):
-
-                self.assignments[var] = value
-                
-
-                consistent, removed = self.forward_check(var, value)
-                
-                if consistent:
-                    result = self.backtrack()
-                    if result:
-                        return True
-                
-
-                self.restore_domains(removed)
-                del self.assignments[var]
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({
+                'success': True,
+                'crypto_result': crypto_result,
+                'features': features,
+                'message': 'Functions executed successfully'
+            })
+        }
         
-        return False
+    except Exception as e:
+        print(f"Error in handler: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({
+                'success': False,
+                'error': str(e)
+            })
+        }
 
-def solve_crypto_init_medium(str1, str2, equal, operation):
-    variables, domains = init_crypto_variables(str1, str2, equal)
-    csp = CSP(variables, domains, str1, str2, equal, operation)
-    
-    if csp.backtrack():
-        return csp.assignments
-    else:
-        return None
+# Optional: Add debug information
+print(f"Successfully imported:")
+print(f"  - solve_crypto_init_medium from crypto")
+print(f"  - make_features from inference") 
+print(f"  - load_sklearn_model from inference")# In index.py
+import importlib.util
+import sys
+import os
+import json
+
+def import_module(module_name, file_path):
+    """Dynamically import a module from file path"""
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+# Usage
+current_dir = os.path.dirname(__file__)
+crypto_module = import_module("crypto", os.path.join(current_dir, "crypto.py"))
+inference_module = import_module("inference", os.path.join(current_dir, "inference.py"))
+
+# Access functions - updated with your actual function names
+solve_crypto_init_medium = crypto_module.solve_crypto_init_medium
+make_features = inference_module.make_features
+load_sklearn_model = inference_module.load_sklearn_model
+
+def handler(event, context):
+    """Main serverless function handler"""
+    try:
+        # Example usage of your imported functions
+        # Adjust parameters based on your actual function signatures
+        
+        # Use crypto function
+        crypto_result = solve_crypto_init_medium()  # Add parameters as needed
+        
+        # Use inference functions
+        features = make_features()  # Add parameters as needed
+        model = load_sklearn_model()  # Add parameters as needed
+        
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({
+                'success': True,
+                'crypto_result': crypto_result,
+                'features': features,
+                'message': 'Functions executed successfully'
+            })
+        }
+        
+    except Exception as e:
+        print(f"Error in handler: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({
+                'success': False,
+                'error': str(e)
+            })
+        }
+
+# Optional: Add debug information
+print(f"Successfully imported:")
+print(f"  - solve_crypto_init_medium from crypto")
+print(f"  - make_features from inference") 
+print(f"  - load_sklearn_model from inference")
+
 
 # For Pydantic v2 compatibility
 os.environ["PYDANTIC_VALIDATION_ERROR_SERIALIZE_JSON_NAR"] = "1"
@@ -221,8 +236,12 @@ try:
     
     if model_path:
         ml_model = load_sklearn_model(model_path)
-        MODEL = True
-        print(f'Model successfully loaded from: {model_path}')
+        if ml_model is not None:
+            MODEL = True
+            print(f'Model successfully loaded from: {model_path}')
+        else:
+            MODEL = False
+            print(f'Failed to load model from: {model_path}')
     else:
         print(f"Model file not found in any of these paths: {possible_paths}")
         
@@ -453,7 +472,21 @@ async def health_check():
 
 # Export app variable directly for Vercel serverless
 # Vercel Python uses ASGI without requiring mangum
-__all__ = ['app']
+__all__ = ['app', 'handler']
+
+# Define a handler function for Vercel
+def handler(event, context):
+    """Handler function for Vercel serverless deployment"""
+    return app
+
+# For compatibility with different serverless platforms
+async def app_handler(scope, receive, send):
+    """ASGI handler wrapper"""
+    await app(scope, receive, send)
+
+# Backwards compatibility for any code that might use 'handler'
+if 'handler' not in locals():
+    handler = app_handler
 
 if __name__ == "__main__":
     import uvicorn

@@ -183,16 +183,23 @@ except Exception as e:
 # Ensure directories exist
 try:
     os.makedirs(TEMPLATES_DIR, exist_ok=True)
-    os.makedirs(STATIC_DIR, exist_ok=True)
-    print(f"Created templates directory at {TEMPLATES_DIR}")
-    print(f"Created static directory at {STATIC_DIR}")
 except Exception as e:
     print(f"Error creating directories: {str(e)}")
 
-# Mount static files
+# Static files directory setup
+STATIC_DIR = os.path.join(os.getcwd(), 'static')
+
+# Mount static files - with conditional handling for Vercel's read-only filesystem
 try:
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-    print(f"Static files mounted from {STATIC_DIR}")
+    # Only attempt to mount static files if the directory exists
+    if os.path.exists(STATIC_DIR):
+        app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+        print(f"Static files mounted from {STATIC_DIR}")
+    else:
+        print(f"Static directory not found at {STATIC_DIR} - static files will not be available")
+        # In production Vercel environment, static files should be handled by Vercel's CDN
+        if os.environ.get('VERCEL') == '1':
+            print("Running on Vercel - static assets should be served by Vercel CDN")
 except Exception as e:
     print(f"Error mounting static files: {str(e)}")
 
@@ -474,19 +481,12 @@ async def health_check():
 # Vercel Python uses ASGI without requiring mangum
 __all__ = ['app', 'handler']
 
-# Define a handler function for Vercel
-def handler(event, context):
-    """Handler function for Vercel serverless deployment"""
-    return app
-
-# For compatibility with different serverless platforms
-async def app_handler(scope, receive, send):
-    """ASGI handler wrapper"""
+# Proper ASGI handler for Vercel serverless deployment
+async def handler(scope, receive, send):
+    """ASGI-compatible handler function for Vercel serverless deployment.
+    This is the function that Vercel will call.
+    """
     await app(scope, receive, send)
-
-# Backwards compatibility for any code that might use 'handler'
-if 'handler' not in locals():
-    handler = app_handler
 
 if __name__ == "__main__":
     import uvicorn

@@ -234,15 +234,21 @@ def performance_test():
 
 
 
-print("\n" + "="*60)
-print("TESTING SIMPLER PROBLEM: TWO + TWO = FOUR")
-print("="*60)
+# Verification code moved to a function to prevent running on import
+def run_verification_test():
+    print("\n" + "="*60)
+    print("TESTING SIMPLER PROBLEM: TWO + TWO = FOUR")
+    print("="*60)
 
-start_time = time.time()
-simple_csp = solve_crypto_init_medium("TWO", "TWO", "FOUR", '+')
-simple_csp_time = time.time() - start_time
-print(f"CSP time for simpler problem: {simple_csp_time:.4f} seconds")
-print_solution_medium(simple_csp, "TWO", "TWO", "FOUR", '+')
+    start_time = time.time()
+    simple_csp = solve_crypto_init_medium("TWO", "TWO", "FOUR", '+')
+    simple_csp_time = time.time() - start_time
+    print(f"CSP time for simpler problem: {simple_csp_time:.4f} seconds")
+    print_solution_medium(simple_csp, "TWO", "TWO", "FOUR", '+')
+
+# Uncomment to run the test manually
+# if __name__ == "__main__":
+#     run_verification_test()
 
 
 

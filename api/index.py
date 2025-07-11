@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from mangum import Mangum
 import os
 import sys
 import time
@@ -33,8 +32,9 @@ print(f"API_DIR: {API_DIR}")
 
 # In Vercel, the root directory is the deployment directory
 # In local development, we need to account for running from api/ subdirectory
-TEMPLATES_DIR = BASE_DIR / 'templates'
+TEMPLATES_DIR = API_DIR / 'templates'
 STATIC_DIR = BASE_DIR / 'static'
+print(f"TEMPLATES_DIR: {TEMPLATES_DIR}")
 
 # Check if files and directories exist before app starts
 try:
@@ -62,6 +62,11 @@ except Exception as e:
 templates = None
 try:
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+    print(f"Templates directory set to: {TEMPLATES_DIR}")
+    if os.path.exists(TEMPLATES_DIR / 'index.html'):
+        print("✅ index.html template found")
+    else:
+        print("❌ index.html template NOT found!")
     print(f"Templates initialized from {TEMPLATES_DIR}")
     # Check if template files exist
     try:
@@ -323,12 +328,9 @@ async def health_check():
 # For Vercel, we expose the app directly
 # The __name__ == "__main__" block is kept for local development
 
-# Create a handler function for Vercel Serverless deployment
-# This is the entry point Vercel will use
-handler = Mangum(app, lifespan="off")
-
-# Also expose app variable directly for Vercel
-__all__ = ['app', 'handler']
+# Export app variable directly for Vercel serverless
+# Vercel Python uses ASGI without requiring mangum
+__all__ = ['app']
 
 if __name__ == "__main__":
     import uvicorn

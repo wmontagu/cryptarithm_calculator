@@ -6,6 +6,8 @@ import os
 import sys
 import time
 import pickle
+import json
+from pathlib import Path
 from crypto import solve_crypto_init_medium
 from inference import make_features, load_sklearn_model
 
@@ -16,6 +18,20 @@ print(f"Starting application in directory: {os.getcwd()}")
 print(f"__file__: {__file__}")
 print(f"Script directory: {os.path.dirname(__file__)}")
 
+# Determine if we're running on Vercel or locally
+IS_VERCEL = os.environ.get('VERCEL', '0') == '1'
+
+# Set up paths - critical for both local and Vercel deployment
+BASE_DIR = Path(os.path.dirname(os.path.dirname(__file__))) if os.path.dirname(__file__) else Path.cwd()
+API_DIR = Path(os.path.dirname(__file__)) if os.path.dirname(__file__) else Path.cwd()
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"API_DIR: {API_DIR}")
+
+# In Vercel, the root directory is the deployment directory
+# In local development, we need to account for running from api/ subdirectory
+TEMPLATES_DIR = BASE_DIR / 'templates'
+STATIC_DIR = BASE_DIR / 'static'
+
 # Check if files and directories exist before app starts
 try:
     print(f"Checking content of current directory: {os.listdir('.')}")
@@ -24,27 +40,28 @@ except Exception as e:
 
 # Ensure directories exist
 try:
-    os.makedirs("templates", exist_ok=True)
-    os.makedirs("static", exist_ok=True)
-    print("Created templates and static directories successfully")
+    os.makedirs(TEMPLATES_DIR, exist_ok=True)
+    os.makedirs(STATIC_DIR, exist_ok=True)
+    print(f"Created templates directory at {TEMPLATES_DIR}")
+    print(f"Created static directory at {STATIC_DIR}")
 except Exception as e:
     print(f"Error creating directories: {str(e)}")
 
 # Mount static files
 try:
-    app.mount("/static", StaticFiles(directory="static"), name="static")
-    print("Static files mounted successfully")
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    print(f"Static files mounted from {STATIC_DIR}")
 except Exception as e:
     print(f"Error mounting static files: {str(e)}")
 
 # Initialize templates
 templates = None
 try:
-    templates = Jinja2Templates(directory="templates")
-    print("Templates initialized successfully")
+    templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+    print(f"Templates initialized from {TEMPLATES_DIR}")
     # Check if template files exist
     try:
-        template_files = os.listdir("templates")
+        template_files = os.listdir(TEMPLATES_DIR)
         print(f"Available template files: {template_files}")
     except Exception as e:
         print(f"Error listing template files: {str(e)}")
@@ -54,11 +71,11 @@ except Exception as e:
 MODEL = False
 ml_model = None
 try:
-    # Try multiple paths for model loading in Vercel environment
+    # Try multiple paths for model loading in both local and Vercel environments
     possible_paths = [
-        os.path.abspath(os.path.join(os.path.dirname(__file__), 'model.json')),
-        os.path.join(os.getcwd(), 'model.json'),
-        'model.json'
+        os.path.join(API_DIR, 'model.json'),  # First check in api directory
+        os.path.join(BASE_DIR, 'model.json'),  # Then check in root directory
+        'model.json'  # Fallback to current directory
     ]
     
     model_path = None
@@ -127,7 +144,7 @@ async def read_root(request: Request):
         
         try:
             # Check if index.html exists
-            template_path = os.path.join("templates", "index.html")
+            template_path = os.path.join(TEMPLATES_DIR, "index.html")
             if not os.path.exists(template_path):
                 print(f"Template file not found: {template_path}")
                 return HTMLResponse(content=f"<h1>Error: Template not found: {template_path}</h1>", status_code=500)
@@ -276,8 +293,8 @@ async def health_check():
         file_list = f"Error listing files: {str(e)}"
         
     try:
-        template_exists = os.path.exists('templates')
-        template_files = os.listdir('templates') if template_exists else []
+        template_exists = os.path.exists(TEMPLATES_DIR)
+        template_files = os.listdir(TEMPLATES_DIR) if template_exists else []
     except Exception as e:
         template_files = f"Error listing template files: {str(e)}"
     
@@ -295,13 +312,14 @@ async def health_check():
 # For Vercel, we expose the app directly
 # The __name__ == "__main__" block is kept for local development
 
-# Vercel handler - this is what Vercel will call
-def handler(request, context):
-    """Vercel serverless function handler"""
-    return app(request, context)
+# Create a handler function for Vercel Serverless deployment
+# This is the entry point Vercel will use
+from mangum import Mangum
 
-# Also expose app directly for Vercel
-# Vercel looks for 'app' variable in the main module
+# Create a proper handler for AWS Lambda / Vercel
+handler = Mangum(app, lifespan="off")
+
+# Also expose app variable directly for Vercel
 __all__ = ['app', 'handler']
 
 if __name__ == "__main__":

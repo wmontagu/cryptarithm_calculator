@@ -8,8 +8,131 @@ import time
 import pickle
 import json
 from pathlib import Path
-from crypto import solve_crypto_init_medium
+import itertools
 from inference import make_features, load_sklearn_model
+
+def init_crypto_variables(str1, str2, equal):
+    dicti = dict()
+    L = []
+    for l in str1:
+        if l not in L:
+            L.append(l)
+    for l in str2:
+        if l not in L:
+            L.append(l)
+    for l in equal:
+        if l not in L:
+            L.append(l)
+    
+    for l in L:
+        dicti[l] = numbers[:]
+    
+    #Initialization making it so first digit cannot be 0.
+    if str1 and str1[0] in dicti:
+        dicti[str1[0]] = numbers[1:]
+    if str2 and str2[0] in dicti:
+        dicti[str2[0]] = numbers[1:]
+    if equal and equal[0] in dicti:
+        dicti[equal[0]] = numbers[1:]
+    
+    return L, dicti
+
+class CSP:
+    def __init__(self, variables, domains, str1, str2, equal, operation):
+        self.variables = variables
+        self.domains = {var: domain[:] for var, domain in domains.items()}
+        self.assignments = {}
+        self.str1 = str1
+        self.str2 = str2
+        self.equal = equal
+        self.operation = operation
+
+    def is_assignment_consistent(self, var, value):
+        for assigned_var, assigned_value in self.assignments.items():
+            if assigned_var != var and assigned_value == value:
+                return False
+        return True
+    
+    def is_complete(self):
+        return len(self.assignments) == len(self.variables)
+    
+    def select_unassigned(self):
+        unassigned = [var for var in self.variables if var not in self.assignments]
+        if not unassigned:
+            return None
+        # MRV
+        return min(unassigned, key=lambda var: len(self.domains[var]))
+    
+    def forward_check(self, var, value):
+        removed = {}
+        for other_var in self.variables:
+            if other_var != var and other_var not in self.assignments:
+                removed[other_var] = []
+                if value in self.domains[other_var]:
+                    self.domains[other_var].remove(value)
+                    removed[other_var].append(value)
+                if not self.domains[other_var]:
+                    return False, removed
+        return True, removed
+    
+    def restore_domains(self, removed):
+        for var, values in removed.items():
+            self.domains[var].extend(values)
+    
+    def check_arithmetic_constraint(self):
+        """Check if current complete assignment satisfies the arithmetic equation"""
+        def word_to_number(word):
+            return int(''.join(str(self.assignments[char]) for char in word))
+        
+        num1 = word_to_number(self.str1)
+        num2 = word_to_number(self.str2)
+        result = word_to_number(self.equal)
+        
+        if self.operation == '+':
+            return (num1 + num2) == result
+        elif self.operation == '-':
+            return (num1 - num2) == result
+        elif self.operation == '*':
+            return (num1 * num2) == result
+        elif self.operation == '/':
+            return num2 != 0 and (num1 // num2) == result
+        return False
+    
+    def backtrack(self):
+        if self.is_complete():
+            return self.check_arithmetic_constraint()
+
+        var = self.select_unassigned()
+        if var is None:
+            return True
+        
+        for value in self.domains[var][:]:  
+            if self.is_assignment_consistent(var, value):
+
+                self.assignments[var] = value
+                
+
+                consistent, removed = self.forward_check(var, value)
+                
+                if consistent:
+                    result = self.backtrack()
+                    if result:
+                        return True
+                
+
+                self.restore_domains(removed)
+                del self.assignments[var]
+        
+        return False
+
+def solve_crypto_init_medium(str1, str2, equal, operation):
+    variables, domains = init_crypto_variables(str1, str2, equal)
+    csp = CSP(variables, domains, str1, str2, equal, operation)
+    
+    if csp.backtrack():
+        return csp.assignments
+    else:
+        return None
 
 # For Pydantic v2 compatibility
 os.environ["PYDANTIC_VALIDATION_ERROR_SERIALIZE_JSON_NAR"] = "1"

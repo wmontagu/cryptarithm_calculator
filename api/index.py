@@ -474,19 +474,27 @@ async def health_check():
         "template_files": template_files
     }
 
-# For Vercel, we expose the app directly
-# The __name__ == "__main__" block is kept for local development
+# For Vercel deployment we need both WSGI and ASGI compatibility
+from http.server import BaseHTTPRequestHandler
 
-# Export app variable directly for Vercel serverless
-# Vercel Python uses ASGI without requiring mangum
+# Create a BaseHTTPRequestHandler class for WSGI compatibility
+class handler(BaseHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        self.app = app
+        super().__init__(*args, **kwargs)
+    
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'FastAPI app is running. Access via proper ASGI server.')
+        return
+
+# Export both the app and handler for Vercel
 __all__ = ['app', 'handler']
 
-# Proper ASGI handler for Vercel serverless deployment
-async def handler(scope, receive, send):
-    """ASGI-compatible handler function for Vercel serverless deployment.
-    This is the function that Vercel will call.
-    """
-    await app(scope, receive, send)
+# Note: The handler class above is for Vercel's WSGI compatibility
+# The app itself is an ASGI application that will be used when possible
 
 if __name__ == "__main__":
     import uvicorn

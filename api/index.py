@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from mangum import Mangum
 import os
 import sys
 import time
@@ -10,6 +11,9 @@ import json
 from pathlib import Path
 from crypto import solve_crypto_init_medium
 from inference import make_features, load_sklearn_model
+
+# For Pydantic v2 compatibility
+os.environ["PYDANTIC_VALIDATION_ERROR_SERIALIZE_JSON_NAR"] = "1"
 
 app = FastAPI(title="Cryptarithm Calculator", description="Solving cryptarithm puzzles using CSP and ML")
 
@@ -278,6 +282,13 @@ async def about(request: Request):
         "model_available": MODEL
     })
 
+@app.get('/favicon.ico', include_in_schema=False)
+async def get_favicon():
+    favicon_path = os.path.join(STATIC_DIR, 'favicon.ico')
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path)
+    return HTMLResponse(status_code=204)  # No content response if favicon doesn't exist
+
 @app.get("/health")
 async def health_check():
     # Get environment details for debugging
@@ -314,9 +325,6 @@ async def health_check():
 
 # Create a handler function for Vercel Serverless deployment
 # This is the entry point Vercel will use
-from mangum import Mangum
-
-# Create a proper handler for AWS Lambda / Vercel
 handler = Mangum(app, lifespan="off")
 
 # Also expose app variable directly for Vercel

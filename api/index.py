@@ -196,12 +196,12 @@ async def get_examples(request: Request):
             "difficulty": "easy"
         },
         {
-            "str1": "ABC", "str2": "DEF", "result": "GHIJ", "operation": "+", 
+            "str1": "GREAT", "str2": "LARGE", "result": "SMALL", "operation": "-", 
             "description": "",
-            "difficulty": "medium"
+            "difficulty": "hard"
         },
         {
-            "str1": "CAB", "str2": "CAB", "result": "DEED", "operation": "+", 
+            "str1": "US", "str2": "US", "result": "YEAH", "operation": "*", 
             "description": "",
             "difficulty": "medium"
         }

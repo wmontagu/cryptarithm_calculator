@@ -331,10 +331,6 @@
             <a href="/about">About</a>
         </div>
 
-        <div class="status-indicator">
-            <span class="status-dot {% if model_available %}available{% else %}unavailable{% endif %}"></span>
-            ML Model: {% if model_available %}Available{% else %}Not Available{% endif %}
-        </div>
 
         {% if error %}
         <div class="alert alert-error">

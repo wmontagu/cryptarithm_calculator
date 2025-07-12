@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Cryptarithm Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        h1, h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            margin-top: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-links a {
+            display: inline-block;
+            margin: 0 15px;
+            color: #6c5ce7;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #4834d4;
+            transform: translateY(-2px);
+        }
+
+        p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .tech-item {
+            display: inline-block;
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 5px 12px;
+            margin: 5px;
+            font-size: 0.9em;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .algorithm-section {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            background: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: #e83e8c;
+            font-size: 0.9em;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: #6c5ce7;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            color: #4834d4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>About Cryptarithm Calculator</h1>
+        <p class="subtitle">Understanding Cryptarithms</p>
+        
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/examples">Examples</a>
+            <a href="/about">About</a>
+        </div>
+
+        <h2>What is a Cryptarithm?</h2>
+        <p>A cryptarithm is a type of mathematical puzzle where the digits in an arithmetic 
+            calculation are replaced with letters. The arithmetic operation is usually addition, although many puzzles include subtraction, multiplication, or rarely division.
+            The goal is to find the correct digit for each letter, ensuring the calculation is valid.</p>
+        <p>For example, in the classic puzzle <code>SEND + MORE = MONEY</code>, each letter represents a unique digit from 0-9, and we need to figure out which digit each letter represents.</p>
+
+        <h2>How The Calculator Works</h2>
+        <p>This calculator uses two approaches to solve and approximate cryptarithms:</p>
+
+        <div class="algorithm-section">
+            <h3>Medium Mode: Constraint Satisfaction Problem (CSP)</h3>
+            <p>The CSP approach uses intelligent search techniques with constraint heuristics to efficiently find solutions:</p>
+            <ul>
+                <li>Each letter is a variable with a domain of possible digits (0-9)</li>
+                <li>Constraints ensure each letter maps to a unique digit</li>
+                <li>The arithmetic operation must be valid with the assigned digits</li>
+                <li>First letters cannot be zero (we can't have leading zeros)</li>
+            </ul>
+            
+            <h4>This implementation uses backtracking with forward checking and the Minimum Remaining Values (MRV) heuristic to efficiently search the solution space.</h4>
+            <h4>Note: The CSP approach outperforms Brute Force enumeration for most practical cryptarithms, though Brute Force can be faster for very small puzzles due to CSP overhead. We exclude Brute Force here as it doesn't scale well with puzzle complexity. I can add the performance test comparison if wanted.</h4>
+        </div>
+
+        <div class="algorithm-section">
+            <h3>Hard Mode: Machine Learning Enhanced</h3>
+            <p>For complex puzzles, we use a machine learning model to predict solvability before attempting to solve:</p>
+            <ul>
+                <li>Features are extracted from the cryptarithm structure</li>
+                <li>A trained Random Forest classifier predicts if a solution exists</li>
+                <li>This helps avoid wasting time on unsolvable puzzles</li>
+            </ul>
+            <h4>If the ML model indicates the puzzle is solvable, we still use the CSP solver to find the actual solution.</h4>
+            <h4>Note: Cryptarithm solving is an NP-complete problem, meaning no poly-time algorithm exists to solve it. The ML approach allows us to identify potentially solvable instances before using exponential  time on a search of the solution space of a invalid instance.</h4>
+        </div>
+
+        <h2>Technologies Used</h2>
+        <div>
+            <span class="tech-item">Python</span>
+            <span class="tech-item">FastAPI</span>
+            <span class="tech-item">Jinja2</span>
+            <span class="tech-item">Scikit-learn</span>
+            <span class="tech-item">HTML/CSS</span>
+            <span class="tech-item">JavaScript</span>
+        </div>
+
+        <h2>Project Information</h2>
+        <p>This is a work in progress and is not yet complete. I plan to add more features such as an interactive performance comparison and add AC3 (Arc Consistency) to Medium Mode.</p>
+        
+        <a href="/" class="back-link">← Back to Calculator</a>
+    </div>
+</body>
+</html>

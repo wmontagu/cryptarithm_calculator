@@ -90,9 +90,19 @@ def format_solution_output(assignment, str1, str2, result_str, operation):
 
 @app.get('/', response_class=HTMLResponse)
 async def read_root(request: Request):
+    # Extract query parameters if they exist
+    str1 = request.query_params.get('str1', '')
+    str2 = request.query_params.get('str2', '')
+    result = request.query_params.get('result', '')
+    operation = request.query_params.get('operation', '+')
+    
     return templates.TemplateResponse("index.html", {
-        "request": request, 
-        "model_available": MODEL
+        "request": request,
+        "model_available": MODEL,
+        "str1": str1,
+        "str2": str2,
+        "result": result,
+        "operation": operation
     })
 
 @app.post("/solve", response_class=HTMLResponse)
@@ -177,22 +187,22 @@ async def get_examples(request: Request):
     examples = [
         {
             "str1": "SEND", "str2": "MORE", "result": "MONEY", "operation": "+", 
-            "description": "The classic cryptarithm puzzle",
+            "description": "",
             "difficulty": "hard"
         },
         {
             "str1": "TWO", "str2": "TWO", "result": "FOUR", "operation": "+", 
-            "description": "Simple addition with repeated words",
+            "description": "",
             "difficulty": "easy"
         },
         {
             "str1": "ABC", "str2": "DEF", "result": "GHIJ", "operation": "+", 
-            "description": "Pattern-based example",
+            "description": "",
             "difficulty": "medium"
         },
         {
             "str1": "CAB", "str2": "CAB", "result": "DEED", "operation": "+", 
-            "description": "Repeated patterns with symmetry",
+            "description": "",
             "difficulty": "medium"
         }
     ]

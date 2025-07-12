@@ -1,18 +1,14 @@
+# Complete app without the problematic components
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 import sys
 import time
-import pickle
-import json
+import importlib.util
 from pathlib import Path
 
-import importlib.util
-import sys
-import os
-import json
+print("Starting complete app test...")
 
 def import_module(module_name, file_path):
     """Dynamically import a module from file path"""
@@ -22,244 +18,43 @@ def import_module(module_name, file_path):
     spec.loader.exec_module(module)
     return module
 
-# Usage
+# Import modules
 current_dir = os.path.dirname(__file__)
 crypto_module = import_module("crypto", os.path.join(current_dir, "crypto.py"))
 inference_module = import_module("inference", os.path.join(current_dir, "inference.py"))
 
-# Access functions - updated with your actual function names
 solve_crypto_init_medium = crypto_module.solve_crypto_init_medium
 make_features = inference_module.make_features
 load_sklearn_model = inference_module.load_sklearn_model
 
-def handler(event, context):
-    """Main serverless function handler"""
-    try:
-        # Example usage of your imported functions
-        # Adjust parameters based on your actual function signatures
-        
-        # Use crypto function
-        crypto_result = solve_crypto_init_medium()  # Add parameters as needed
-        
-        # Use inference functions
-        features = make_features()  # Add parameters as needed
-        model = load_sklearn_model()  # Add parameters as needed
-        
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({
-                'success': True,
-                'crypto_result': crypto_result,
-                'features': features,
-                'message': 'Functions executed successfully'
-            })
-        }
-        
-    except Exception as e:
-        print(f"Error in handler: {str(e)}")
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({
-                'success': False,
-                'error': str(e)
-            })
-        }
+print("✅ All imports successful")
 
-# Optional: Add debug information
-print(f"Successfully imported:")
-print(f"  - solve_crypto_init_medium from crypto")
-print(f"  - make_features from inference") 
-print(f"  - load_sklearn_model from inference")# In index.py
-import importlib.util
-import sys
-import os
-import json
-
-def import_module(module_name, file_path):
-    """Dynamically import a module from file path"""
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-# Usage
-current_dir = os.path.dirname(__file__)
-crypto_module = import_module("crypto", os.path.join(current_dir, "crypto.py"))
-inference_module = import_module("inference", os.path.join(current_dir, "inference.py"))
-
-# Access functions - updated with your actual function names
-solve_crypto_init_medium = crypto_module.solve_crypto_init_medium
-make_features = inference_module.make_features
-load_sklearn_model = inference_module.load_sklearn_model
-
-def handler(event, context):
-    """Main serverless function handler"""
-    try:
-        # Example usage of your imported functions
-        # Adjust parameters based on your actual function signatures
-        
-        # Use crypto function
-        crypto_result = solve_crypto_init_medium()  # Add parameters as needed
-        
-        # Use inference functions
-        features = make_features()  # Add parameters as needed
-        model = load_sklearn_model()  # Add parameters as needed
-        
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({
-                'success': True,
-                'crypto_result': crypto_result,
-                'features': features,
-                'message': 'Functions executed successfully'
-            })
-        }
-        
-    except Exception as e:
-        print(f"Error in handler: {str(e)}")
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({
-                'success': False,
-                'error': str(e)
-            })
-        }
-
-# Optional: Add debug information
-print(f"Successfully imported:")
-print(f"  - solve_crypto_init_medium from crypto")
-print(f"  - make_features from inference") 
-print(f"  - load_sklearn_model from inference")
-
-
-# For Pydantic v2 compatibility
-os.environ["PYDANTIC_VALIDATION_ERROR_SERIALIZE_JSON_NAR"] = "1"
-
+# Create FastAPI app
 app = FastAPI(title="Cryptarithm Calculator", description="Solving cryptarithm puzzles using CSP and ML")
 
-# Add startup debugging information
-print(f"Starting application in directory: {os.getcwd()}")
-print(f"__file__: {__file__}")
-print(f"Script directory: {os.path.dirname(__file__)}")
-
-# Determine if we're running on Vercel or locally
-IS_VERCEL = os.environ.get('VERCEL', '0') == '1'
-
-# Set up paths - critical for both local and Vercel deployment
-BASE_DIR = Path(os.path.dirname(os.path.dirname(__file__))) if os.path.dirname(__file__) else Path.cwd()
-API_DIR = Path(os.path.dirname(__file__)) if os.path.dirname(__file__) else Path.cwd()
-print(f"BASE_DIR: {BASE_DIR}")
-print(f"API_DIR: {API_DIR}")
-
-# In Vercel, the root directory is the deployment directory
-# In local development, we need to account for running from api/ subdirectory
-TEMPLATES_DIR = API_DIR / 'templates'
+# Setup templates
+BASE_DIR = Path("/var/task")
+TEMPLATES_DIR = BASE_DIR / 'templates'
 STATIC_DIR = BASE_DIR / 'static'
-print(f"TEMPLATES_DIR: {TEMPLATES_DIR}")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Check if files and directories exist before app starts
-try:
-    print(f"Checking content of current directory: {os.listdir('.')}")
-except Exception as e:
-    print(f"Error listing current directory: {str(e)}")
+print(f"Templates directory: {TEMPLATES_DIR}")
+print(f"✅ Templates initialized")
 
-# Ensure directories exist
-try:
-    os.makedirs(TEMPLATES_DIR, exist_ok=True)
-except Exception as e:
-    print(f"Error creating directories: {str(e)}")
-
-# Static files directory setup
-STATIC_DIR = os.path.join(os.getcwd(), 'static')
-
-# Mount static files - with conditional handling for Vercel's read-only filesystem
-try:
-    # Only attempt to mount static files if the directory exists
-    if os.path.exists(STATIC_DIR):
-        app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-        print(f"Static files mounted from {STATIC_DIR}")
-    else:
-        print(f"Static directory not found at {STATIC_DIR} - static files will not be available")
-        # In production Vercel environment, static files should be handled by Vercel's CDN
-        if os.environ.get('VERCEL') == '1':
-            print("Running on Vercel - static assets should be served by Vercel CDN")
-except Exception as e:
-    print(f"Error mounting static files: {str(e)}")
-
-# Initialize templates
-templates = None
-try:
-    templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
-    print(f"Templates directory set to: {TEMPLATES_DIR}")
-    if os.path.exists(TEMPLATES_DIR / 'index.html'):
-        print("✅ index.html template found")
-    else:
-        print("❌ index.html template NOT found!")
-    print(f"Templates initialized from {TEMPLATES_DIR}")
-    # Check if template files exist
-    try:
-        template_files = os.listdir(TEMPLATES_DIR)
-        print(f"Available template files: {template_files}")
-    except Exception as e:
-        print(f"Error listing template files: {str(e)}")
-except Exception as e:
-    print(f"Error initializing templates: {str(e)}")
-
+# Load model
 MODEL = False
 ml_model = None
 try:
-    # Try multiple paths for model loading in both local and Vercel environments
-    possible_paths = [
-        os.path.join(API_DIR, 'model.json'),  # First check in api directory
-        os.path.join(BASE_DIR, 'model.json'),  # Then check in root directory
-        'model.json'  # Fallback to current directory
-    ]
-    
-    model_path = None
-    for path in possible_paths:
-        if os.path.exists(path):
-            print(f"Found model at: {path}")
-            model_path = path
-            break
-        else:
-            print(f"Model not found at: {path}")
-    
-    if model_path:
+    model_path = os.path.join(current_dir, 'model.json')
+    if os.path.exists(model_path):
         ml_model = load_sklearn_model(model_path)
-        if ml_model is not None:
-            MODEL = True
-            print(f'Model successfully loaded from: {model_path}')
-        else:
-            MODEL = False
-            print(f'Failed to load model from: {model_path}')
-    else:
-        print(f"Model file not found in any of these paths: {possible_paths}")
-        
+        MODEL = ml_model is not None
+        print(f"✅ Model loaded: {MODEL}")
 except Exception as e:
-    print(f"ML Model loading error: {str(e)}")
-    import traceback
-    print(traceback.format_exc())
-    print("Running without ML model - only CSP method available")
+    print(f"Model error: {e}")
 
+# Use ML Model
 def predict_solvability(str1, str2, equal, operation):
-    
     if not MODEL or ml_model is None:
         return None, "Model is not available"
     
@@ -283,7 +78,7 @@ def format_solution_output(assignment, str1, str2, result_str, operation):
     num2 = word_to_number(str2)
     result = word_to_number(result_str)
     
-    solution_data = {
+    return {
         'assignments': {var: assignment[var] for var in sorted(assignment.keys())},
         'num1': num1,
         'num2': num2,
@@ -291,32 +86,14 @@ def format_solution_output(assignment, str1, str2, result_str, operation):
         'equation': f"{num1} {operation} {num2} = {result}",
         'verification': f"Verification: {num1} {operation} {num2} = {result}"
     }
-    return solution_data
+
 
 @app.get('/', response_class=HTMLResponse)
 async def read_root(request: Request):
-    """Main page"""
-    try:
-        if templates is None:
-            return HTMLResponse(content="<h1>Error: Templates not available</h1>", status_code=500)
-        
-        try:
-            # Check if index.html exists
-            template_path = os.path.join(TEMPLATES_DIR, "index.html")
-            if not os.path.exists(template_path):
-                print(f"Template file not found: {template_path}")
-                return HTMLResponse(content=f"<h1>Error: Template not found: {template_path}</h1>", status_code=500)
-                
-            return templates.TemplateResponse("index.html", {
-                "request": request, 
-                "model_available": MODEL
-            })
-        except Exception as e:
-            print(f"Template rendering error: {str(e)}")
-            return HTMLResponse(content=f"<h1>Template rendering error: {str(e)}</h1>", status_code=500)
-    except Exception as e:
-        print(f"Error in read_root: {str(e)}")
-        return HTMLResponse(content=f"<h1>Server error: {str(e)}</h1>", status_code=500)
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "model_available": MODEL
+    })
 
 @app.post("/solve", response_class=HTMLResponse)
 async def solve_cryptarithm(
@@ -356,7 +133,6 @@ async def solve_cryptarithm(
             "method": method
         })
     
-    
     response_data = {
         "request": request,
         "str1": str1,
@@ -366,7 +142,6 @@ async def solve_cryptarithm(
         "method": method,
         "model_available": MODEL
     }
-    
     
     if method == 'hard' or method == 'both':
         if MODEL:
@@ -379,7 +154,6 @@ async def solve_cryptarithm(
             response_data["prediction_available"] = False
             if method == 'hard':
                 response_data["info"] = "ML model not available. Consider using Medium mode instead."
-    
     
     if method == 'medium' or method == 'both':
         start_time = time.time()
@@ -436,70 +210,13 @@ async def about(request: Request):
         "model_available": MODEL
     })
 
-@app.get('/favicon.ico', include_in_schema=False)
-async def get_favicon():
-    favicon_path = os.path.join(STATIC_DIR, 'favicon.ico')
-    if os.path.exists(favicon_path):
-        return FileResponse(favicon_path)
-    return HTMLResponse(status_code=204)  # No content response if favicon doesn't exist
-
 @app.get("/health")
 async def health_check():
-    # Get environment details for debugging
-    env_info = {}
-    for key in ["VERCEL", "VERCEL_ENV", "VERCEL_URL", "VERCEL_REGION", "PYTHON_VERSION"]:
-        if key in os.environ:
-            env_info[key] = os.environ[key]
-            
-    # Check directories and files
-    try:
-        file_list = os.listdir('.')
-    except Exception as e:
-        file_list = f"Error listing files: {str(e)}"
-        
-    try:
-        template_exists = os.path.exists(TEMPLATES_DIR)
-        template_files = os.listdir(TEMPLATES_DIR) if template_exists else []
-    except Exception as e:
-        template_files = f"Error listing template files: {str(e)}"
-    
     return {
         "status": "healthy",
         "ml_model_available": MODEL,
         "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
-        "current_directory": os.getcwd(),
-        "environment_info": env_info,
-        "files_in_root": file_list,
-        "template_dir_exists": template_exists if 'template_exists' in locals() else None,
-        "template_files": template_files
+        "current_directory": os.getcwd()
     }
 
-# For Vercel deployment we need both WSGI and ASGI compatibility
-from http.server import BaseHTTPRequestHandler
-
-# Create a BaseHTTPRequestHandler class for WSGI compatibility
-class handler(BaseHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        self.app = app
-        super().__init__(*args, **kwargs)
-    
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-        self.wfile.write(b'FastAPI app is running. Access via proper ASGI server.')
-        return
-
-# Export both the app and handler for Vercel
-__all__ = ['app', 'handler']
-
-# Note: The handler class above is for Vercel's WSGI compatibility
-# The app itself is an ASGI application that will be used when possible
-
-if __name__ == "__main__":
-    import uvicorn
-    print("🚀 Starting Cryptarithm Calculator...")
-    print(f"📊 ML Model Available: {MODEL}")
-    print("🌐 Access the app at: http://localhost:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
-    
+print("✅ Complete FastAPI app created successfully")

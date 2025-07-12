@@ -106,7 +106,7 @@ class CSP:
         unassigned = [var for var in self.variables if var not in self.assignments]
         if not unassigned:
             return None
-        # MRV
+        # MRV (Minimum Remaining Values)
         return min(unassigned, key=lambda var: len(self.domains[var]))
     
     def forward_check(self, var, value):
@@ -203,52 +203,32 @@ def print_solution_medium(assignment, str1, str2, result_str, operation):
         print("No solution found")
 
 
-# Hard
+# Performance Test code used for benchmarking.
+# In theory, medium should run faster than easy.
 
-def performance_test():
+def performance_test(str1, str2, equal, operation):
     print("=== PERFORMANCE COMPARISON ===")
-    
-
     print("\nTesting CSP method...")
     start_time = time.time()
-    csp_solution = solve_crypto_init_medium("SEND", "MORE", "MONEY", '+')
+    csp_solution = solve_crypto_init_medium(str1, str2, equal, operation)
     csp_time = time.time() - start_time
     
     print(f"CSP Runtime: {csp_time:.4f} seconds")
     if csp_solution:
         print("CSP Solution found!")
-        print_solution_medium(csp_solution, "SEND", "MORE", "MONEY", '+')
+        print_solution_medium(csp_solution, str1, str2, equal, operation)
     
     print("\n" + "="*50)
     
     print("\nTesting Brute Force method...")
     start_time = time.time()
-    easy_solution = solve_crypto_init_easy("SEND", "MORE", "MONEY", '+')
+    easy_solution = solve_crypto_init_easy(str1, str2, equal, operation)
     brute_time = time.time() - start_time
     
     print(f"Brute Force Runtime: {brute_time:.4f} seconds")
     print(f"Brute Force Result: {easy_solution}")
     
     print(f"\nSpeedup: {brute_time/csp_time:.1f}x faster with CSP")
-
-
-
-
-# Verification code moved to a function to prevent running on import
-def run_verification_test():
-    print("\n" + "="*60)
-    print("TESTING SIMPLER PROBLEM: TWO + TWO = FOUR")
-    print("="*60)
-
-    start_time = time.time()
-    simple_csp = solve_crypto_init_medium("TWO", "TWO", "FOUR", '+')
-    simple_csp_time = time.time() - start_time
-    print(f"CSP time for simpler problem: {simple_csp_time:.4f} seconds")
-    print_solution_medium(simple_csp, "TWO", "TWO", "FOUR", '+')
-
-# Uncomment to run the test manually
-# if __name__ == "__main__":
-#     run_verification_test()
 
 
 
